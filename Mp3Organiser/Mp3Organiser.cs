@@ -81,6 +81,7 @@ namespace Mp3Organiser
             if (mTotalFiles < 1) return 0;
             return (int)((float)mFileCount * 100 / (float)mTotalFiles);
         }
+        private bool mCurrentTagIsCompilation = false;
 
         public object Organise(object p, BackgroundWorker w, DoWorkEventArgs e)
         {
@@ -163,11 +164,38 @@ namespace Mp3Organiser
             return true;
         }
 
+        /// <summary>
+        /// Gets the tag information from an audio file.
+        /// It uses the "Comment" field
+        /// </summary>
+        /// <param name="fullPath"></param>
+        /// <returns></returns>
+        public Tag OpenTag(string fullPath)
+        {
+            Tag tag = null;
+            // finally, let TagLib decide, but CompilationInfo will default as false.
+            try { 
+                tag = TagLib.File.Create(fullPath).Tag;
+                /*
+                if ((tag.TagTypes & TagTypes.Id3v2) == TagTypes.Id3v2)
+                {
+                    TagLib.Id3v2.Tag iTag = tag as TagLib.Id3v2.Tag;
+                }
+                 */
+                Console.WriteLine("..." + (tag.TagTypes & TagTypes.Id3v2) +" COMPILATION: "+mCurrentTagIsCompilation);
+            }
+            catch { return null; }
+                mCurrentTagIsCompilation = false;
+            return tag;
+        }
+
         public string GetPathFromInfo(string fullPath)
         {
-            Tag tag;
-            try { tag = TagLib.File.Create(fullPath).Tag; }
-            catch { return null; }
+            TagLib.Mpeg.AudioFile a;
+            
+            Tag tag = OpenTag(fullPath);
+            if (tag == null) return null;
+
             string Extension = Path.GetExtension(fullPath).ToLower();
             string Album = tag.Album;
             if (Album == null || Album.Length == 0) Album = "Unknown Album";
@@ -178,6 +206,8 @@ namespace Mp3Organiser
             if (Title == null || Title.Length == 0) Title = "Unknown";
             int Track = (int)tag.Track;
             if (Track < 1 || Track > 999) Track = 0;
+                
+            Console.WriteLine("Tag type: " + tag.TagTypes.GetType());
 
             string possiblePath = mDestFolder + Path.DirectorySeparatorChar + string.Format(FormatString, Track, Artist, Album, Title, Extension);
             string newPath = GetValidPath(possiblePath);
