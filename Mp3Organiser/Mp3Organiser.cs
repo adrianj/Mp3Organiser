@@ -12,6 +12,7 @@ namespace Mp3Organiser
     public class Mp3Organiser
     {
         /// <summary>
+        /// String to define filename formatting. See String.Format for how it works.
         /// Assumes parameters are:
         /// {0} = Track number
         /// {1} = First Album Artist
@@ -20,6 +21,10 @@ namespace Mp3Organiser
         /// {4} = File extension (typically ".mp3")
         /// </summary>
         public string FormatString { get; set; }
+        /// <summary>
+        /// String to define filename formatting for tracks noted as part of a Compilation. See String.Format for how it works.
+        /// </summary>
+        public string FormatStringCompilation { get; set; }
         /// <summary>
         /// Specifies whether to automatically replace invalid path characters with ' '
         /// </summary>
@@ -50,9 +55,7 @@ namespace Mp3Organiser
             {
                 if(value == null) return;
                 if (Directory.Exists(value)) 
-                    if(!value.Equals(mDestFolder))
                         mSourceFolder = value;
-                    else throw new ArgumentException("Destination folder cannot be the same as source folder.");
                 else throw new ArgumentException("Source Folder '"+value+"' does not exist.");
             }
         }
@@ -62,24 +65,24 @@ namespace Mp3Organiser
             set
             {
                 if(value == null) return;
-                if (Directory.Exists(value))
-                    if (mSourceFolder != null && !mSourceFolder.Contains(value)) mDestFolder = value;
-                    else throw new ArgumentException("Destination folder cannot be within source folder.");
+                if (Directory.Exists(value)) mDestFolder = value;
                 else throw new ArgumentException("Destination Folder '" + value + "' does not exist.");
             }
         }
 
         public Mp3Organiser() {
         // Default FormatString
-            FormatString = "\"{1}\\{2}\\{0:00} - {3}{4}";
+            FormatString = "{1}\\{2}\\{0:00} - {3}{4}";
+            FormatStringCompilation = "{2}\\{0:00} - {1} - {3}{4}";
         }
 
-        private int mTotalFiles = 1;
+        private List<string> mFileList = new List<string>();
+        //private int mTotalFiles = 1;
         private int mFileCount = 0;
         private int getProgress()
         {
-            if (mTotalFiles < 1) return 0;
-            return (int)((float)mFileCount * 100 / (float)mTotalFiles);
+            if (mFileList.Count < 1) return 0;
+            return (int)((float)mFileCount * 100 / (float)mFileList.Count);
         }
         private bool mCurrentTagIsCompilation = false;
 
@@ -93,30 +96,17 @@ namespace Mp3Organiser
                 return null;
             }
             w.ReportProgress(0,"Counting files...");
-            mTotalFiles = 0;
-            mTotalFiles = countFiles("\\");
-            if (mTotalFiles < 1)
+            mFileList.Clear();
+            //mTotalFiles = 0;
+            //mTotalFiles = countFiles("\\");
+            if (mFileList.Count < 1)
             {
                 w.ReportProgress(100, "No supported file types found in Source folder.");
                 return null;
             }
-            w.ReportProgress(getProgress(), "Found "+mTotalFiles+" files.");
+            w.ReportProgress(getProgress(), "Found "+mFileList.Count+" files.");
 
-            Organise("\\", w, e);
-
-            w.ReportProgress(getProgress(), "DONE!");
-
-            return null;
-        }
-
-        public void Organise(string pathRelativeToSource, BackgroundWorker w, DoWorkEventArgs e)
-        {
-            string srcDir = mSourceFolder + pathRelativeToSource;
-            foreach (string dir in Directory.GetDirectories(srcDir))
-            {
-                Organise(pathRelativeToSource + Path.GetFileName(dir) + Path.DirectorySeparatorChar,w,e);
-            }
-            foreach (string file in Directory.GetFiles(srcDir))
+            foreach (string file in mFileList)
             {
                 string Extension = Path.GetExtension(file).ToLower();
                 if (SupportedExtenstions.Contains(Extension))
@@ -136,7 +126,12 @@ namespace Mp3Organiser
                     }
                 }
             }
+
+            w.ReportProgress(getProgress(), "DONE!");
+
+            return null;
         }
+
 
         public bool ReplaceFile(string fullPath)
         {
@@ -174,25 +169,42 @@ namespace Mp3Organiser
         {
             Tag tag = null;
             // finally, let TagLib decide, but CompilationInfo will default as false.
-            try { 
-                tag = TagLib.File.Create(fullPath).Tag;
-                /*
-                if ((tag.TagTypes & TagTypes.Id3v2) == TagTypes.Id3v2)
+            try
+            {
+                TagLib.File file = TagLib.File.Create(fullPath);
+                Console.WriteLine(Path.GetFileNameWithoutExtension(fullPath)+"\nTAGS: " + file.TagTypes);
+                
+                mCurrentTagIsCompilation = false;
+                if ((file.TagTypes & TagTypes.Id3v2) > 0)
                 {
-                    TagLib.Id3v2.Tag iTag = tag as TagLib.Id3v2.Tag;
+                    TagLib.Id3v2.Tag iTag = (TagLib.Id3v2.Tag)file.GetTag(TagTypes.Id3v2);
+                    Console.WriteLine("iTag: " + iTag + "," + iTag.IsCompilation);
+                    if (iTag.IsCompilation) mCurrentTagIsCompilation = true;
+                    return iTag;
                 }
-                 */
-                Console.WriteLine("..." + (tag.TagTypes & TagTypes.Id3v2) +" COMPILATION: "+mCurrentTagIsCompilation);
+                
+                if ((file.TagTypes & TagTypes.Apple) > 0)
+                {
+                    TagLib.Mpeg4.AppleTag iTag = (TagLib.Mpeg4.AppleTag)file.GetTag(TagTypes.Apple);
+                    Console.WriteLine("iTag: " + iTag + "," + iTag.IsCompilation);
+                    if (iTag.IsCompilation) mCurrentTagIsCompilation = true;
+                    return iTag;
+                }
+                 
+                // If not any of above tags, then try the default create.
+                tag = file.Tag;
+                Console.WriteLine("..." + (file.TagTypes & TagTypes.Id3v2) + " COMPILATION: " + mCurrentTagIsCompilation);
             }
-            catch { return null; }
+            catch
+            {
+                return null;
+            }
                 mCurrentTagIsCompilation = false;
             return tag;
         }
 
         public string GetPathFromInfo(string fullPath)
         {
-            TagLib.Mpeg.AudioFile a;
-            
             Tag tag = OpenTag(fullPath);
             if (tag == null) return null;
 
@@ -203,13 +215,14 @@ namespace Mp3Organiser
             if (Artist == null || Artist.Length == 0) Artist = tag.FirstAlbumArtist;
             if (Artist == null || Artist.Length == 0) Artist = "Unknown Artist";
             string Title = tag.Title;
-            if (Title == null || Title.Length == 0) Title = "Unknown";
+            if (Title == null || Title.Length == 0) Title = "Unknown Title";
             int Track = (int)tag.Track;
             if (Track < 1 || Track > 999) Track = 0;
                 
-            Console.WriteLine("Tag type: " + tag.TagTypes.GetType());
 
-            string possiblePath = mDestFolder + Path.DirectorySeparatorChar + string.Format(FormatString, Track, Artist, Album, Title, Extension);
+            string formattedPath = string.Format(FormatString, Track, Artist, Album, Title, Extension);
+            if (mCurrentTagIsCompilation) formattedPath = string.Format(FormatStringCompilation, Track, Artist, Album, Title, Extension);
+            string possiblePath = mDestFolder + Path.DirectorySeparatorChar + formattedPath;
             string newPath = GetValidPath(possiblePath);
             if (newPath == null) throw new IOException("Invalid Path: '" + possiblePath + "'");
             return newPath;
@@ -301,7 +314,10 @@ namespace Mp3Organiser
             {
                 string Extension = Path.GetExtension(file).ToLower();
                 if (SupportedExtenstions.Contains(Extension))
+                {
                     total++;
+                    mFileList.Add(file);
+                }
             }
             return total;
         }
