@@ -98,7 +98,7 @@ namespace Mp3Organiser
             w.ReportProgress(0,"Counting files...");
             mFileList.Clear();
             //mTotalFiles = 0;
-            //mTotalFiles = countFiles("\\");
+            countFiles("\\");
             if (mFileList.Count < 1)
             {
                 w.ReportProgress(100, "No supported file types found in Source folder.");
