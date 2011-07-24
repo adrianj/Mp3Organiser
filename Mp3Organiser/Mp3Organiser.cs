@@ -11,6 +11,7 @@ namespace Mp3Organiser
 {
     public class Mp3Organiser
     {
+		private string mFormatString = "{1}\\{2}\\{0:00} {3}{4}";
         /// <summary>
         /// String to define filename formatting. See String.Format for how it works.
         /// Assumes parameters are:
@@ -20,11 +21,12 @@ namespace Mp3Organiser
         /// {3} = Title
         /// {4} = File extension (typically ".mp3")
         /// </summary>
-        public string FormatString { get; set; }
+		public string FormatString { get { return mFormatString; } set { mFormatString = value; } }
+		private string mFormatStringCompilation = "{2}\\{0:00} {1} - {3}{4}";
         /// <summary>
         /// String to define filename formatting for tracks noted as part of a Compilation. See String.Format for how it works.
         /// </summary>
-        public string FormatStringCompilation { get; set; }
+		public string FormatStringCompilation { get { return mFormatStringCompilation; } set { mFormatStringCompilation = value; } }
         /// <summary>
         /// Specifies whether to automatically replace invalid path characters with ' '
         /// </summary>
@@ -75,9 +77,6 @@ namespace Mp3Organiser
         private BackgroundWorker mWorker = null;
 
         public Mp3Organiser() {
-        // Default FormatString
-            FormatString = "{1}\\{2}\\{0:00} {3}{4}";
-            FormatStringCompilation = "{2}\\{0:00} {1} - {3}{4}";
         }
 
         private int getProgress()
@@ -142,10 +141,13 @@ namespace Mp3Organiser
         {
             string sourceDir = Path.GetDirectoryName(sourceFile);
             string targetDir = Path.GetDirectoryName(targetFile);
-            if (sourceDir.Equals(targetFile, StringComparison.InvariantCultureIgnoreCase))
-                System.IO.File.Move(sourceFile, targetFile);
-            else
-                System.IO.File.Copy(sourceFile, targetFile);
+			if (sourceDir.Equals(targetDir, StringComparison.InvariantCultureIgnoreCase))
+			{
+				Console.WriteLine("Moving: " + targetFile);
+				System.IO.File.Move(sourceFile, targetFile);
+			}
+			else
+				System.IO.File.Copy(sourceFile, targetFile);
         }
 
         private void RemoveDuplicateFilesWithDifferentExtensions()

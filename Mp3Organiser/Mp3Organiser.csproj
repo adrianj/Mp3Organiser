@@ -65,8 +65,8 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AdriansLib">
-      <HintPath>..\..\AdriansLib\AdriansLib\bin\Debug\AdriansLib.dll</HintPath>
+    <Reference Include="DTALib">
+      <HintPath>..\..\AdriansLib\AdriansLib\bin\Release\DTALib.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

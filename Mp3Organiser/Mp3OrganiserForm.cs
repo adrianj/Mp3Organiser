@@ -51,12 +51,29 @@ namespace Mp3Organiser
             autoCheck.Checked = true;
             deleteFilesCheck.Checked = false;
             PopulatePreferredFileCombo();
+			UpdateFormatField();
         }
 
         private void PopulatePreferredFileCombo()
         {
 
         }
+
+		private void UpdateFormatField()
+		{
+			formatBox.Text = mOrganiser.FormatString;
+			formatCompBox.Text = mOrganiser.FormatStringCompilation;
+		}
+
+		private void UpdateOrganiser()
+		{
+			Console.WriteLine("progBarStatus: " + progressBar.DialogResult);
+			mOrganiser.PreferredFileExtenstion = ".mp3";
+			mOrganiser.AutomaticallyCorrectFilenames = autoCheck.Checked;
+			mOrganiser.DeleteSupportedFilesNotInSource = deleteFilesCheck.Checked;
+			mOrganiser.FormatString = formatBox.Text;
+			mOrganiser.FormatStringCompilation = formatCompBox.Text;
+		}
 
         private void RequestDestFolder()
         {
@@ -137,13 +154,12 @@ namespace Mp3Organiser
 
         private void progressBar_ButtonClick(object sender, EventArgs e)
         {
-            mOrganiser.PreferredFileExtenstion = ".mp3";
-            mOrganiser.AutomaticallyCorrectFilenames = autoCheck.Checked;
-            mOrganiser.DeleteSupportedFilesNotInSource = deleteFilesCheck.Checked;
+			UpdateOrganiser();
             progressBar.StartWorker(mOrganiser.Organise);
 
         }
         #endregion
+
 
         private string printCommands()
         {
