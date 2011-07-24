@@ -70,11 +70,11 @@ namespace Mp3Organiser
 
         public Mp3Organiser() {
         // Default FormatString
-            FormatString = "{1}\\{2}\\{0:00} - {3}{4}";
-            FormatStringCompilation = "{2}\\{0:00} - {1} - {3}{4}";
+            FormatString = "{1}\\{2}\\{0:00} {3}{4}";
+            FormatStringCompilation = "{2}\\{0:00} {1} - {3}{4}";
         }
 
-        private List<string> mFileList = new List<string>();
+        private Dictionary<string, string> mFileList = new Dictionary<string, string>();
         //private int mTotalFiles = 1;
         private int mFileCount = 0;
         private int getProgress()
@@ -104,44 +104,63 @@ namespace Mp3Organiser
             }
             w.ReportProgress(getProgress(), "Found "+mFileList.Count+" files.");
 
-            foreach (string file in mFileList)
+            //List<string> targetFiles = new List<string>();
+
+            foreach (KeyValuePair<string,string> pair in mFileList)
             {
+                string file = pair.Key;
+                string targetPath = pair.Value;
                 string Extension = Path.GetExtension(file).ToLower();
                 if (SupportedExtenstions.Contains(Extension))
                 {
                     mFileCount++;
-                    string targetPath = GetPathFromInfo(file);
                     if (targetPath == null) continue;
                     if (!CreateFolder(targetPath)) throw new IOException("Could not create: '" + targetPath + "'");
-                    if (ReplaceFile(targetPath))
-                    {
-                        w.ReportProgress(getProgress(), "Copying file '" + targetPath + "'");
-                        System.IO.File.Copy(file, targetPath);
-                    }
-                    else
-                    {
-                        w.ReportProgress(getProgress(), "Ignoring file '" + targetPath + "'");
-                    }
+                     if (ReplaceFile(targetPath))
+                        {
+                            w.ReportProgress(getProgress(), "Copying file '" + targetPath + "'");
+                            CopyOrMove(file, targetPath);
+                        }
+                        else
+                        {
+                            w.ReportProgress(getProgress(), "Ignoring file '" + targetPath + "'");
+                        }
                 }
             }
-
+            // Delete files that AREN'T in the list!
+            DeleteFilesNotInList();
             w.ReportProgress(getProgress(), "DONE!");
 
             return null;
         }
 
+        private void CopyOrMove(string sourceFile, string targetFile)
+        {
+            string sourceDir = Path.GetDirectoryName(sourceFile);
+            string targetDir = Path.GetDirectoryName(targetFile);
+            if (sourceDir.Equals(targetFile, StringComparison.InvariantCultureIgnoreCase))
+                System.IO.File.Move(sourceFile, targetFile);
+            else
+                System.IO.File.Copy(sourceFile, targetFile);
+        }
+
+        private void DeleteFilesNotInList()
+        {
+            foreach (string s in mFileList.Values)
+                Console.WriteLine("keep: " + s);
+        }
 
         public bool ReplaceFile(string fullPath)
         {
             if(System.IO.File.Exists(fullPath))
             {
-                Console.WriteLine("**************What to do with duplicate files?????**************");
+                Console.WriteLine("***Found Duplicate - Ignoring***");
                 return false;
             }
             if (PreferredFileExtenstion != null)
             {                
                 // Need to check if other files with different extensions exist, and keep preferred one.
-                /*
+                
                 foreach (string supported in SupportedExtenstions.Split(new char[] { '|' }))
                 {
                     string possiblePath = Path.GetDirectoryName(fullPath) + Path.DirectorySeparatorChar+ Path.GetFileNameWithoutExtension(fullPath) + supported;
@@ -151,7 +170,7 @@ namespace Mp3Organiser
                         Console.WriteLine("deleting file: '" + possiblePath + "'");
                     }
                 }
-                 */
+                 
                 return true;
             }
             return true;
@@ -170,13 +189,13 @@ namespace Mp3Organiser
             try
             {
                 TagLib.File file = TagLib.File.Create(fullPath);
-                Console.WriteLine(Path.GetFileNameWithoutExtension(fullPath)+"\nTAGS: " + file.TagTypes);
+                //Console.WriteLine(Path.GetFileNameWithoutExtension(fullPath)+"\nTAGS: " + file.TagTypes);
                 
                 mCurrentTagIsCompilation = false;
                 if ((file.TagTypes & TagTypes.Id3v2) > 0)
                 {
                     TagLib.Id3v2.Tag iTag = (TagLib.Id3v2.Tag)file.GetTag(TagTypes.Id3v2);
-                    Console.WriteLine("iTag: " + iTag + "," + iTag.IsCompilation);
+                    //Console.WriteLine("iTag: " + iTag + "," + iTag.IsCompilation);
                     if (iTag.IsCompilation) mCurrentTagIsCompilation = true;
                     return iTag;
                 }
@@ -184,14 +203,14 @@ namespace Mp3Organiser
                 if ((file.TagTypes & TagTypes.Apple) > 0)
                 {
                     TagLib.Mpeg4.AppleTag iTag = (TagLib.Mpeg4.AppleTag)file.GetTag(TagTypes.Apple);
-                    Console.WriteLine("iTag: " + iTag + "," + iTag.IsCompilation);
+                    //Console.WriteLine("iTag: " + iTag + "," + iTag.IsCompilation);
                     if (iTag.IsCompilation) mCurrentTagIsCompilation = true;
                     return iTag;
                 }
                  
                 // If not any of above tags, then try the default create.
                 tag = file.Tag;
-                Console.WriteLine("..." + (file.TagTypes & TagTypes.Id3v2) + " COMPILATION: " + mCurrentTagIsCompilation);
+                //Console.WriteLine("..." + (file.TagTypes & TagTypes.Id3v2) + " COMPILATION: " + mCurrentTagIsCompilation);
             }
             catch
             {
@@ -308,13 +327,17 @@ namespace Mp3Organiser
             {
                 total += countFiles(pathRelativeToSource + Path.GetFileName(dir) + Path.DirectorySeparatorChar);
             }
-            foreach (string file in Directory.GetFiles(srcDir))
+            foreach (string sourcePath in Directory.GetFiles(srcDir))
             {
-                string Extension = Path.GetExtension(file).ToLower();
+                string Extension = Path.GetExtension(sourcePath).ToLower();
                 if (SupportedExtenstions.Contains(Extension))
                 {
-                    total++;
-                    mFileList.Add(file);
+                    string targetPath = GetPathFromInfo(sourcePath);
+                    if (!mFileList.Values.Contains(targetPath))
+                    {
+                        total++;
+                        mFileList.Add(sourcePath, targetPath);
+                    }
                 }
             }
             return total;
