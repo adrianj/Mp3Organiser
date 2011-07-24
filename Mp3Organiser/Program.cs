@@ -17,7 +17,9 @@ namespace Mp3Organiser
             Application.SetCompatibleTextRenderingDefault(false);
             Mp3OrganiserForm form = new Mp3OrganiserForm();
             if (args.Length > 0) form.SourceFolder = args[0];
+            else form.SourceFolder = Properties.Settings.Default.SourceFolder;
             if (args.Length > 1) form.DestinationFolder = args[1];
+            else form.DestinationFolder = Properties.Settings.Default.DestFolder;
             Application.Run(form);
         }
     }

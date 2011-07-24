@@ -53,7 +53,6 @@ namespace Mp3Organiser
             get { return mSourceFolder; }
             set
             {
-                if(value == null) return;
                 if (Directory.Exists(value)) 
                         mSourceFolder = value;
                 else throw new ArgumentException("Source Folder '"+value+"' does not exist.");
@@ -64,7 +63,6 @@ namespace Mp3Organiser
             get { return mDestFolder; }
             set
             {
-                if(value == null) return;
                 if (Directory.Exists(value)) mDestFolder = value;
                 else throw new ArgumentException("Destination Folder '" + value + "' does not exist.");
             }

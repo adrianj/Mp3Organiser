@@ -51,6 +51,33 @@ namespace Mp3Organiser
             InitializeComponent();
         }
 
+        private void RequestDestFolder()
+        {
+            folderBrowser.Description = "Select Destination Folder";
+            folderBrowser.SelectedPath = Properties.Settings.Default.DestFolder;
+            folderBrowser.ShowDialog();
+            if (folderBrowser.SelectedPath != null && folderBrowser.SelectedPath.Length > 0)
+            {
+                mOrganiser.DestinationFolder = folderBrowser.SelectedPath;
+                destBox.Text = mOrganiser.DestinationFolder;
+                Properties.Settings.Default.DestFolder = folderBrowser.SelectedPath;
+                Properties.Settings.Default.Save();
+            }
+        }
+
+        private void RequestSourceFolder()
+        {
+            folderBrowser.Description = "Select Source Folder";
+            folderBrowser.SelectedPath = Properties.Settings.Default.SourceFolder;
+            folderBrowser.ShowDialog();
+            if (folderBrowser.SelectedPath != null && folderBrowser.SelectedPath.Length > 0)
+            {
+                mOrganiser.SourceFolder = folderBrowser.SelectedPath;
+                srcBox.Text = mOrganiser.SourceFolder;
+                Properties.Settings.Default.SourceFolder = folderBrowser.SelectedPath;
+                Properties.Settings.Default.Save();
+            }
+        }
         #region Button Handlers
         private void srcButton_Click(object sender, EventArgs e)
         {
@@ -101,33 +128,6 @@ namespace Mp3Organiser
 
         }
 
-		private void RequestDestFolder()
-		{
-			folderBrowser.Description = "Select Destination Folder";
-			folderBrowser.SelectedPath = Properties.Settings.Default.DestFolder;
-			folderBrowser.ShowDialog();
-			if (folderBrowser.SelectedPath != null && folderBrowser.SelectedPath.Length > 0)
-			{
-				mOrganiser.DestinationFolder = folderBrowser.SelectedPath;
-				destBox.Text = mOrganiser.DestinationFolder;
-				Properties.Settings.Default.DestFolder = folderBrowser.SelectedPath;
-				Properties.Settings.Default.Save();
-			}
-		}
-
-		private void RequestSourceFolder()
-		{
-			folderBrowser.Description = "Select Source Folder";
-			folderBrowser.SelectedPath = Properties.Settings.Default.SourceFolder;
-			folderBrowser.ShowDialog();
-			if (folderBrowser.SelectedPath != null && folderBrowser.SelectedPath.Length > 0)
-			{
-				mOrganiser.SourceFolder = folderBrowser.SelectedPath;
-				srcBox.Text = mOrganiser.SourceFolder;
-				Properties.Settings.Default.SourceFolder = folderBrowser.SelectedPath;
-				Properties.Settings.Default.Save();
-			}
-		}
 
         private void progressBar_ButtonClick(object sender, EventArgs e)
         {
