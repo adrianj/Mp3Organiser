@@ -50,6 +50,12 @@ namespace Mp3Organiser
             InitializeComponent();
             autoCheck.Checked = true;
             deleteFilesCheck.Checked = false;
+            PopulatePreferredFileCombo();
+        }
+
+        private void PopulatePreferredFileCombo()
+        {
+
         }
 
         private void RequestDestFolder()
@@ -131,6 +137,7 @@ namespace Mp3Organiser
 
         private void progressBar_ButtonClick(object sender, EventArgs e)
         {
+            mOrganiser.PreferredFileExtenstion = ".mp3";
             mOrganiser.AutomaticallyCorrectFilenames = autoCheck.Checked;
             mOrganiser.DeleteSupportedFilesNotInSource = deleteFilesCheck.Checked;
             progressBar.StartWorker(mOrganiser.Organise);

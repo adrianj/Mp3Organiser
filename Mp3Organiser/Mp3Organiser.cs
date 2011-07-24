@@ -69,35 +69,37 @@ namespace Mp3Organiser
             }
         }
 
+        private bool mCurrentTagIsCompilation = false;
+        private Dictionary<string, string> mFileList = new Dictionary<string, string>();
+        private int mCopiedFileCount = 0;
+        private BackgroundWorker mWorker = null;
+
         public Mp3Organiser() {
         // Default FormatString
             FormatString = "{1}\\{2}\\{0:00} {3}{4}";
             FormatStringCompilation = "{2}\\{0:00} {1} - {3}{4}";
         }
 
-        private Dictionary<string, string> mFileList = new Dictionary<string, string>();
-        //private int mTotalFiles = 1;
-        private int mFileCount = 0;
         private int getProgress()
         {
             if (mFileList.Count < 1) return 0;
-            return (int)((float)mFileCount * 100 / (float)mFileList.Count);
+            return (int)((float)mCopiedFileCount * 100 / (float)mFileList.Count);
         }
-        private bool mCurrentTagIsCompilation = false;
 
         public object Organise(object p, BackgroundWorker w, DoWorkEventArgs e)
         {
-            //PreferredFileExtenstion = ".m4a";
             ReplaceSameFileDialogResult = DialogResult.Abort;
             if (mSourceFolder == null)// || mDestFolder == null)  // add second half later.
             {
                 w.ReportProgress(0, "Source or Destination invalid");
                 return null;
             }
-            w.ReportProgress(0,"Counting files...");
+            mWorker = w;
             mFileList.Clear();
             //mTotalFiles = 0;
             countFiles("\\");
+            if(PreferredFileExtenstion != null)
+                RemoveDuplicateFilesWithDifferentExtensions();
             if (mFileList.Count < 1)
             {
                 w.ReportProgress(100, "No supported file types found in Source folder.");
@@ -114,7 +116,7 @@ namespace Mp3Organiser
                 string Extension = Path.GetExtension(file).ToLower();
                 if (SupportedExtenstions.Contains(Extension))
                 {
-                    mFileCount++;
+                    mCopiedFileCount++;
                     if (targetPath == null) continue;
                     if (!CreateFolder(targetPath)) throw new IOException("Could not create: '" + targetPath + "'");
                      if (ReplaceFile(targetPath))
@@ -146,6 +148,54 @@ namespace Mp3Organiser
                 System.IO.File.Copy(sourceFile, targetFile);
         }
 
+        private void RemoveDuplicateFilesWithDifferentExtensions()
+        {
+            List<string> keysToRemove = new List<string>();
+            foreach (KeyValuePair<string,string> pair in mFileList)
+            {
+                Console.WriteLine("Check: " + pair.Value);
+                string targetPath = pair.Value;
+                List<string> duplicates = GetKeysWithSameTargetPath(targetPath);
+                if (duplicates.Count > 0)
+                {
+                    RemoveNonPrefferredFilenames(duplicates);
+                    keysToRemove.AddRange(duplicates);
+                }
+            }
+            foreach (string key in keysToRemove)
+            {
+                Console.WriteLine("Removing from list: " + mFileList[key]);
+                mFileList.Remove(key);
+            }
+        }
+
+        private void RemoveNonPrefferredFilenames(List<string> filenames)
+        {
+            int index = -1;
+            for (int i = 0; i < filenames.Count; i++)
+            {
+                string ext = Path.GetExtension(filenames[i]);
+                if (ext.Equals(PreferredFileExtenstion))
+                    index = i;
+            }
+            if(index >= 0)
+                filenames.RemoveAt(index);
+        }
+
+        private List<string> GetKeysWithSameTargetPath(string targetPath)
+        {
+            List<string> retList = new List<string>();
+            string name = Path.GetFileNameWithoutExtension(targetPath);
+            foreach (KeyValuePair<string, string> pair in mFileList)
+            {
+                string otherName = Path.GetFileNameWithoutExtension(pair.Value);
+                if (otherName.Equals(name) && !targetPath.Equals(pair.Value))
+                    retList.Add(pair.Key);
+            }
+            return retList;
+        }
+
+
         private void DeleteFilesNotInList(string directory)
         {
             foreach (string subDir in Directory.GetDirectories(directory))
@@ -159,16 +209,13 @@ namespace Mp3Organiser
             }
             int files = Directory.GetFiles(directory).Length;
             int dirs = Directory.GetDirectories(directory).Length;
-            Console.WriteLine(""+directory+": file in dir: " + files+", dirs in dir: "+dirs);
             if ((files + dirs) < 1)
                 Directory.Delete(directory);
-            else
-                foreach (string s in Directory.GetFiles(directory))
-                    Console.WriteLine("file: " + s);
         }
 
         public void DeleteFile(string filePath)
         {
+            Console.WriteLine("Deleting: " + filePath);
             System.IO.File.Delete(filePath);
         }
 
@@ -182,7 +229,6 @@ namespace Mp3Organiser
             if (PreferredFileExtenstion != null)
             {                
                 // Need to check if other files with different extensions exist, and keep preferred one.
-                
                 foreach (string supported in SupportedExtenstions.Split(new char[] { '|' }))
                 {
                     string possiblePath = Path.GetDirectoryName(fullPath) + Path.DirectorySeparatorChar+ Path.GetFileNameWithoutExtension(fullPath) + supported;
@@ -200,24 +246,20 @@ namespace Mp3Organiser
 
         /// <summary>
         /// Gets the tag information from an audio file.
-        /// It uses the "Comment" field
         /// </summary>
         /// <param name="fullPath"></param>
         /// <returns></returns>
         public Tag OpenTag(string fullPath)
         {
             Tag tag = null;
-            // finally, let TagLib decide, but CompilationInfo will default as false.
             try
             {
                 TagLib.File file = TagLib.File.Create(fullPath);
-                //Console.WriteLine(Path.GetFileNameWithoutExtension(fullPath)+"\nTAGS: " + file.TagTypes);
                 
                 mCurrentTagIsCompilation = false;
                 if ((file.TagTypes & TagTypes.Id3v2) > 0)
                 {
                     TagLib.Id3v2.Tag iTag = (TagLib.Id3v2.Tag)file.GetTag(TagTypes.Id3v2);
-                    //Console.WriteLine("iTag: " + iTag + "," + iTag.IsCompilation);
                     if (iTag.IsCompilation) mCurrentTagIsCompilation = true;
                     return iTag;
                 }
@@ -225,14 +267,12 @@ namespace Mp3Organiser
                 if ((file.TagTypes & TagTypes.Apple) > 0)
                 {
                     TagLib.Mpeg4.AppleTag iTag = (TagLib.Mpeg4.AppleTag)file.GetTag(TagTypes.Apple);
-                    //Console.WriteLine("iTag: " + iTag + "," + iTag.IsCompilation);
                     if (iTag.IsCompilation) mCurrentTagIsCompilation = true;
                     return iTag;
                 }
                  
                 // If not any of above tags, then try the default create.
                 tag = file.Tag;
-                //Console.WriteLine("..." + (file.TagTypes & TagTypes.Id3v2) + " COMPILATION: " + mCurrentTagIsCompilation);
             }
             catch
             {
@@ -354,14 +394,23 @@ namespace Mp3Organiser
                 if (IsSupportedFileType(sourcePath))
                 {
                     string targetPath = GetPathFromInfo(sourcePath);
-                    if (!mFileList.Values.Contains(targetPath))
+                    if (IsValidToAdd(targetPath))
                     {
                         total++;
                         mFileList.Add(sourcePath, targetPath);
                     }
                 }
             }
+            if (mWorker != null)
+                mWorker.ReportProgress(0, "Counting files...\n"+pathRelativeToSource);
             return total;
+        }
+
+        private bool IsValidToAdd(string targetPath)
+        {
+            if (!mFileList.Values.Contains(targetPath))
+                return true;
+            return false;
         }
 
         private bool IsSupportedFileType(string filePath)
