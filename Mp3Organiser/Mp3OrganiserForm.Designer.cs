@@ -40,6 +40,7 @@
             this.formatBox = new System.Windows.Forms.TextBox();
             this.progressBar = new AdriansLib.ProgressBarControl();
             this.autoCheck = new System.Windows.Forms.CheckBox();
+            this.deleteFilesCheck = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // srcBox
@@ -149,6 +150,7 @@
             this.progressBar.TabIndex = 9;
             this.progressBar.Value = 0;
             this.progressBar.ButtonClick += new System.EventHandler(this.progressBar_ButtonClick);
+            this.progressBar.Load += new System.EventHandler(this.progressBar_Load);
             // 
             // autoCheck
             // 
@@ -157,17 +159,31 @@
             this.autoCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.autoCheck.Location = new System.Drawing.Point(15, 98);
             this.autoCheck.Name = "autoCheck";
-            this.autoCheck.Size = new System.Drawing.Size(175, 17);
+            this.autoCheck.Size = new System.Drawing.Size(171, 17);
             this.autoCheck.TabIndex = 10;
-            this.autoCheck.Text = "Automatically Correct Filenames";
+            this.autoCheck.Text = "Automatically correct filenames";
             this.autoCheck.UseVisualStyleBackColor = true;
             this.autoCheck.CheckedChanged += new System.EventHandler(this.autoCheck_CheckedChanged);
+            // 
+            // deleteFilesCheck
+            // 
+            this.deleteFilesCheck.AutoSize = true;
+            this.deleteFilesCheck.Checked = true;
+            this.deleteFilesCheck.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.deleteFilesCheck.Location = new System.Drawing.Point(15, 121);
+            this.deleteFilesCheck.Name = "deleteFilesCheck";
+            this.deleteFilesCheck.Size = new System.Drawing.Size(244, 17);
+            this.deleteFilesCheck.TabIndex = 11;
+            this.deleteFilesCheck.Text = "Delete supported file types not in source folder";
+            this.deleteFilesCheck.UseVisualStyleBackColor = true;
+            this.deleteFilesCheck.CheckedChanged += new System.EventHandler(this.deleteFilesCheck_CheckedChanged);
             // 
             // Mp3OrganiserForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(461, 320);
+            this.Controls.Add(this.deleteFilesCheck);
             this.Controls.Add(this.autoCheck);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.label3);
@@ -200,6 +216,7 @@
         private System.Windows.Forms.TextBox formatBox;
         private AdriansLib.ProgressBarControl progressBar;
         private System.Windows.Forms.CheckBox autoCheck;
+        private System.Windows.Forms.CheckBox deleteFilesCheck;
     }
 }
 

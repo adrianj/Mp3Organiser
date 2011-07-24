@@ -29,6 +29,7 @@ namespace Mp3Organiser
         /// Specifies whether to automatically replace invalid path characters with ' '
         /// </summary>
         public bool AutomaticallyCorrectFilenames { get; set; }
+        public bool DeleteSupportedFilesNotInSource { get; set; }
         private string mPreferredExt;
         /// <summary>
         /// Defines behaviour for copying files with same details but different extensions.
@@ -128,7 +129,8 @@ namespace Mp3Organiser
                 }
             }
             // Delete files that AREN'T in the list!
-            DeleteFilesNotInList();
+            if(DeleteSupportedFilesNotInSource)
+                DeleteFilesNotInList(mDestFolder);
             w.ReportProgress(getProgress(), "DONE!");
 
             return null;
@@ -144,10 +146,30 @@ namespace Mp3Organiser
                 System.IO.File.Copy(sourceFile, targetFile);
         }
 
-        private void DeleteFilesNotInList()
+        private void DeleteFilesNotInList(string directory)
         {
-            foreach (string s in mFileList.Values)
-                Console.WriteLine("keep: " + s);
+            foreach (string subDir in Directory.GetDirectories(directory))
+            {
+                DeleteFilesNotInList(subDir);
+            }
+            foreach (string file in Directory.GetFiles(directory))
+            {
+                if (!mFileList.Values.Contains(file) && IsSupportedFileType(file))
+                    DeleteFile(file);
+            }
+            int files = Directory.GetFiles(directory).Length;
+            int dirs = Directory.GetDirectories(directory).Length;
+            Console.WriteLine(""+directory+": file in dir: " + files+", dirs in dir: "+dirs);
+            if ((files + dirs) < 1)
+                Directory.Delete(directory);
+            else
+                foreach (string s in Directory.GetFiles(directory))
+                    Console.WriteLine("file: " + s);
+        }
+
+        public void DeleteFile(string filePath)
+        {
+            System.IO.File.Delete(filePath);
         }
 
         public bool ReplaceFile(string fullPath)
@@ -329,8 +351,7 @@ namespace Mp3Organiser
             }
             foreach (string sourcePath in Directory.GetFiles(srcDir))
             {
-                string Extension = Path.GetExtension(sourcePath).ToLower();
-                if (SupportedExtenstions.Contains(Extension))
+                if (IsSupportedFileType(sourcePath))
                 {
                     string targetPath = GetPathFromInfo(sourcePath);
                     if (!mFileList.Values.Contains(targetPath))
@@ -341,6 +362,15 @@ namespace Mp3Organiser
                 }
             }
             return total;
+        }
+
+        private bool IsSupportedFileType(string filePath)
+        {
+            string extension = Path.GetExtension(filePath).ToLower();
+            if (SupportedExtenstions.Contains(extension))
+                return true;
+            else 
+                return false;
         }
 
     }

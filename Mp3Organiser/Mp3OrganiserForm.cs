@@ -47,8 +47,9 @@ namespace Mp3Organiser
 
         public Mp3OrganiserForm()
         {
-            mOrganiser.AutomaticallyCorrectFilenames = true;
             InitializeComponent();
+            autoCheck.Checked = true;
+            deleteFilesCheck.Checked = false;
         }
 
         private void RequestDestFolder()
@@ -81,7 +82,6 @@ namespace Mp3Organiser
         #region Button Handlers
         private void srcButton_Click(object sender, EventArgs e)
         {
-            
             try
             {
                 if (sender == srcButton) {
@@ -131,6 +131,8 @@ namespace Mp3Organiser
 
         private void progressBar_ButtonClick(object sender, EventArgs e)
         {
+            mOrganiser.AutomaticallyCorrectFilenames = autoCheck.Checked;
+            mOrganiser.DeleteSupportedFilesNotInSource = deleteFilesCheck.Checked;
             progressBar.StartWorker(mOrganiser.Organise);
 
         }
@@ -145,7 +147,17 @@ namespace Mp3Organiser
 
         private void autoCheck_CheckedChanged(object sender, EventArgs e)
         {
-            mOrganiser.AutomaticallyCorrectFilenames = autoCheck.Checked;
+            
+        }
+
+        private void progressBar_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void deleteFilesCheck_CheckedChanged(object sender, EventArgs e)
+        {
+            
         }
 
     }
