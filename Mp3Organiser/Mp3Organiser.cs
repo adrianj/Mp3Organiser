@@ -11,6 +11,9 @@ namespace Mp3Organiser
 {
     public class Mp3Organiser
     {
+		public static string[] SupportedExtensions = new string[] { ".mp3", ".m4a", ".wma" };
+		public const string NullExtension = "none";
+
 		private string mFormatString = "{1}\\{2}\\{0:00} {3}{4}";
         /// <summary>
         /// String to define filename formatting. See String.Format for how it works.
@@ -32,7 +35,7 @@ namespace Mp3Organiser
         /// </summary>
         public bool AutomaticallyCorrectFilenames { get; set; }
         public bool DeleteSupportedFilesNotInSource { get; set; }
-        private string mPreferredExt;
+        private string mPreferredExt = NullExtension;
         /// <summary>
         /// Defines behaviour for copying files with same details but different extensions.
         /// When 'null' both files are kept, otherwise the preferred extenstion is used.
@@ -43,12 +46,6 @@ namespace Mp3Organiser
             set { if (value != null) mPreferredExt = value.ToLower(); else mPreferredExt = null; }
         }
         public DialogResult ReplaceSameFileDialogResult { get; set; }
-        private string mSupportedExtensions = ".mp3|.m4a";
-        public string SupportedExtenstions
-        {
-            get { return mSupportedExtensions; }
-            set { if (value != null) mSupportedExtensions = value.ToLower(); else mSupportedExtensions = ".mp3|.m4a"; }
-        }
         private string mSourceFolder;
         private string mDestFolder;
         public string SourceFolder
@@ -97,7 +94,7 @@ namespace Mp3Organiser
             mFileList.Clear();
             //mTotalFiles = 0;
             countFiles("\\");
-            if(PreferredFileExtenstion != null)
+            if(!PreferredFileExtenstion.Equals(NullExtension))
                 RemoveDuplicateFilesWithDifferentExtensions();
             if (mFileList.Count < 1)
             {
@@ -113,7 +110,7 @@ namespace Mp3Organiser
                 string file = pair.Key;
                 string targetPath = pair.Value;
                 string Extension = Path.GetExtension(file).ToLower();
-                if (SupportedExtenstions.Contains(Extension))
+				if (SupportedExtensions.Equals(Extension))
                 {
                     mCopiedFileCount++;
                     if (targetPath == null) continue;
@@ -231,7 +228,7 @@ namespace Mp3Organiser
             if (PreferredFileExtenstion != null)
             {                
                 // Need to check if other files with different extensions exist, and keep preferred one.
-                foreach (string supported in SupportedExtenstions.Split(new char[] { '|' }))
+                foreach (string supported in SupportedExtensions)
                 {
                     string possiblePath = Path.GetDirectoryName(fullPath) + Path.DirectorySeparatorChar+ Path.GetFileNameWithoutExtension(fullPath) + supported;
                     Console.WriteLine("possible file: '" + possiblePath + "'");
@@ -418,7 +415,7 @@ namespace Mp3Organiser
         private bool IsSupportedFileType(string filePath)
         {
             string extension = Path.GetExtension(filePath).ToLower();
-            if (SupportedExtenstions.Contains(extension))
+            if (SupportedExtensions.Equals(extension))
                 return true;
             else 
                 return false;

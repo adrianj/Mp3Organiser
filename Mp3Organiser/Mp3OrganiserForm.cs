@@ -56,7 +56,10 @@ namespace Mp3Organiser
 
         private void PopulatePreferredFileCombo()
         {
-
+			preferredTypeCombo.Items.Clear();
+			preferredTypeCombo.Items.Add(Mp3Organiser.NullExtension);
+			preferredTypeCombo.Items.AddRange(Mp3Organiser.SupportedExtensions);
+			preferredTypeCombo.SelectedIndex = 0;
         }
 
 		private void UpdateFormatField()
@@ -73,6 +76,7 @@ namespace Mp3Organiser
 			mOrganiser.DeleteSupportedFilesNotInSource = deleteFilesCheck.Checked;
 			mOrganiser.FormatString = formatBox.Text;
 			mOrganiser.FormatStringCompilation = formatCompBox.Text;
+			mOrganiser.PreferredFileExtenstion = preferredTypeCombo.SelectedItem as string;
 		}
 
         private void RequestDestFolder()

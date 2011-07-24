@@ -43,6 +43,8 @@
 			this.deleteFilesCheck = new System.Windows.Forms.CheckBox();
 			this.label4 = new System.Windows.Forms.Label();
 			this.formatCompBox = new System.Windows.Forms.TextBox();
+			this.label5 = new System.Windows.Forms.Label();
+			this.preferredTypeCombo = new System.Windows.Forms.ComboBox();
 			this.SuspendLayout();
 			// 
 			// srcBox
@@ -136,14 +138,15 @@
 			// 
 			// progressBar
 			// 
-			this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+			this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+						| System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.progressBar.ButtonWidth = 116;
 			this.progressBar.CanCancel = true;
 			this.progressBar.Cursor = System.Windows.Forms.Cursors.Arrow;
 			this.progressBar.DialogResult = System.Windows.Forms.DialogResult.OK;
 			this.progressBar.EnableTextBox = true;
-			this.progressBar.Location = new System.Drawing.Point(11, 169);
+			this.progressBar.Location = new System.Drawing.Point(11, 195);
 			this.progressBar.Maximum = 100;
 			this.progressBar.Minimum = 0;
 			this.progressBar.Name = "progressBar";
@@ -159,7 +162,7 @@
 			this.autoCheck.AutoSize = true;
 			this.autoCheck.Checked = true;
 			this.autoCheck.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.autoCheck.Location = new System.Drawing.Point(15, 123);
+			this.autoCheck.Location = new System.Drawing.Point(15, 150);
 			this.autoCheck.Name = "autoCheck";
 			this.autoCheck.Size = new System.Drawing.Size(171, 17);
 			this.autoCheck.TabIndex = 10;
@@ -172,7 +175,7 @@
 			this.deleteFilesCheck.AutoSize = true;
 			this.deleteFilesCheck.Checked = true;
 			this.deleteFilesCheck.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.deleteFilesCheck.Location = new System.Drawing.Point(15, 146);
+			this.deleteFilesCheck.Location = new System.Drawing.Point(15, 173);
 			this.deleteFilesCheck.Name = "deleteFilesCheck";
 			this.deleteFilesCheck.Size = new System.Drawing.Size(244, 17);
 			this.deleteFilesCheck.TabIndex = 11;
@@ -198,11 +201,30 @@
 			this.formatCompBox.Size = new System.Drawing.Size(226, 20);
 			this.formatCompBox.TabIndex = 12;
 			// 
+			// label5
+			// 
+			this.label5.AutoSize = true;
+			this.label5.Location = new System.Drawing.Point(12, 119);
+			this.label5.Name = "label5";
+			this.label5.Size = new System.Drawing.Size(77, 13);
+			this.label5.TabIndex = 14;
+			this.label5.Text = "Preferred Type";
+			// 
+			// preferredTypeCombo
+			// 
+			this.preferredTypeCombo.FormattingEnabled = true;
+			this.preferredTypeCombo.Location = new System.Drawing.Point(108, 116);
+			this.preferredTypeCombo.Name = "preferredTypeCombo";
+			this.preferredTypeCombo.Size = new System.Drawing.Size(121, 21);
+			this.preferredTypeCombo.TabIndex = 15;
+			// 
 			// Mp3OrganiserForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(461, 334);
+			this.ClientSize = new System.Drawing.Size(461, 360);
+			this.Controls.Add(this.preferredTypeCombo);
+			this.Controls.Add(this.label5);
 			this.Controls.Add(this.label4);
 			this.Controls.Add(this.formatCompBox);
 			this.Controls.Add(this.deleteFilesCheck);
@@ -241,6 +263,8 @@
         private System.Windows.Forms.CheckBox deleteFilesCheck;
 		private System.Windows.Forms.Label label4;
 		private System.Windows.Forms.TextBox formatCompBox;
+		private System.Windows.Forms.Label label5;
+		private System.Windows.Forms.ComboBox preferredTypeCombo;
     }
 }
 
