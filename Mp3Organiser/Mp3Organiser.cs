@@ -109,9 +109,9 @@ namespace Mp3Organiser
             {
                 string file = pair.Key;
                 string targetPath = pair.Value;
-                string Extension = Path.GetExtension(file).ToLower();
-				if (SupportedExtensions.Equals(Extension))
-                {
+                //string Extension = Path.GetExtension(file).ToLower();
+				//if (SupportedExtensions.Contains(Extension))
+                //{
                     mCopiedFileCount++;
                     if (targetPath == null) continue;
                     if (!CreateFolder(targetPath)) throw new IOException("Could not create: '" + targetPath + "'");
@@ -124,7 +124,7 @@ namespace Mp3Organiser
                         {
                             w.ReportProgress(getProgress(), "Ignoring file '" + targetPath + "'");
                         }
-                }
+                //}
             }
             // Delete files that AREN'T in the list!
             if(DeleteSupportedFilesNotInSource)
@@ -152,7 +152,7 @@ namespace Mp3Organiser
             List<string> keysToRemove = new List<string>();
             foreach (KeyValuePair<string,string> pair in mFileList)
             {
-                Console.WriteLine("Check: " + pair.Value);
+                //Console.WriteLine("Check: " + pair.Value);
                 string targetPath = pair.Value;
                 List<string> duplicates = GetKeysWithSameTargetPath(targetPath);
                 if (duplicates.Count > 0)
@@ -231,7 +231,7 @@ namespace Mp3Organiser
                 foreach (string supported in SupportedExtensions)
                 {
                     string possiblePath = Path.GetDirectoryName(fullPath) + Path.DirectorySeparatorChar+ Path.GetFileNameWithoutExtension(fullPath) + supported;
-                    Console.WriteLine("possible file: '" + possiblePath + "'");
+                    //Console.WriteLine("possible file: '" + possiblePath + "'");
                     if (System.IO.File.Exists(possiblePath) && !supported.Equals(PreferredFileExtenstion))
                     {
                         Console.WriteLine("deleting file: '" + possiblePath + "'");
@@ -415,7 +415,7 @@ namespace Mp3Organiser
         private bool IsSupportedFileType(string filePath)
         {
             string extension = Path.GetExtension(filePath).ToLower();
-            if (SupportedExtensions.Equals(extension))
+            if (SupportedExtensions.Contains(extension))
                 return true;
             else 
                 return false;
